@@ -1,3 +1,5 @@
+'use strict';
+
 const mongoose = require('mongoose');
 
 const blogPostSchema = mongoose.Schema({
@@ -24,6 +26,22 @@ blogPostSchema.methods.apiRepr = function() {
     created: this.created
   };
 }
+
+const userSchema = mongoose.Schema({
+  firstName: {type: String, required: true},
+  lastName: {type: String, required: true},
+  username: {type: String, required: true},
+  password: {type: String, required: true},
+  created: {type: Date, default: Date.now}
+});
+
+userSchema.methods.hashPassword = function() {
+
+};
+
+userSchema.methods.validatePassword = function() {
+  
+};
 
 const BlogPost = mongoose.model('BlogPost', blogPostSchema);
 
