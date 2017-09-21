@@ -70,6 +70,43 @@ app.get('api/public', function(req,res) {
   res.sendStatus('Good Morning, Vietnam!');
 });
 
+app.post('/users', (req, res) => {
+  // adding a new user
+  let {username, password, firstName, lastName} = req.body;
+  return UserModel
+    .find({username})
+    .count()
+    .then(count => {
+      if (count > 0) {
+        return Promise.reject({
+          code: 400, 
+          reason: 'ValidationError',
+          message: 'Username already taken',
+          location: 'username'
+        });
+      }
+      return UserModel.hashPassword(password);
+    })
+    .then(digest => {
+      return UserModel
+        .create({
+          username,
+          password: digest,
+          firstName,
+          lastName
+        });
+    })
+    .then(user => {
+      return res.status(201).json(user.apiRepr());
+    })
+    .catch(err => {
+      if (err.reason === 'ValidationError') {
+        return res.status(err.code).json(err);
+      }
+      res.status(500).json({code: 500, message: 'Internal server error'});
+    });
+});
+
 // @@@@@@@@@@@@@@@@@@@@@@@@ BLOG POSTS @@@@@@@@@@@@@@@@@@@@@@@@@@
 
 app.get('/posts', (req, res) => {
@@ -163,15 +200,7 @@ app.delete('/:id', (req, res) => {
     });
 });
 
-app.post('/users', (req, res) => {
-  
-  
-  req.body.firstName // Alice
-  req.body.lastName // Bobson
-  
-  // "username": "alice_user",
-  //"password": "topsecret",
-});
+
 
 app.use('*', function(req, res) {
   res.status(404).json({message: 'Not Found'});

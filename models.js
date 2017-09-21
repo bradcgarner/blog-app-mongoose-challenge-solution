@@ -42,11 +42,11 @@ const userSchema = mongoose.Schema({
   created: {type: Date, default: Date.now}
 });
 
-userSchema.methods.hashPassword = function(password) {
+userSchema.methods.validatePassword = function(password) {
   return bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.validatePassword = function(password) {
+userSchema.methods.hashPassword = function(password) {
   return bcrypt.hash(password, 10);
 };
 
