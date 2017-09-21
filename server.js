@@ -67,17 +67,22 @@ app.get('/api/protected', authenticate, function(req, res) {
 });
 
 app.get('api/public', function(req,res) {
-  res.sendStatus('Good Morning, Vietnam!');
+  res.status(200).json('Good Morning, Vietnam!');
 });
 
 app.post('/users', (req, res) => {
   // adding a new user
+  //console.log('req.body ', req.body);
   let {username, password, firstName, lastName} = req.body;
+  //console.log('4 vars ', username, password, firstName, lastName);
+  //console.log(UserModel);
   return UserModel
     .find({username})
     .count()
     .then(count => {
+      //console.log('count ', count);
       if (count > 0) {
+        //console.log('count > 0');
         return Promise.reject({
           code: 400, 
           reason: 'ValidationError',
@@ -85,9 +90,12 @@ app.post('/users', (req, res) => {
           location: 'username'
         });
       }
+      //console.log('ready to hash password');
+      console.log('UserModel.hashPassword ', UserModel.hashPassword);
       return UserModel.hashPassword(password);
     })
     .then(digest => {
+      console.log('digest ', digest);
       return UserModel
         .create({
           username,
@@ -97,9 +105,11 @@ app.post('/users', (req, res) => {
         });
     })
     .then(user => {
+      console.log('user ', user);
       return res.status(201).json(user.apiRepr());
     })
     .catch(err => {
+      console.log('err ', err);
       if (err.reason === 'ValidationError') {
         return res.status(err.code).json(err);
       }

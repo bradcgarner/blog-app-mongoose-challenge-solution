@@ -46,7 +46,9 @@ userSchema.methods.validatePassword = function(password) {
   return bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.hashPassword = function(password) {
+userSchema.statics.hashPassword = function(password) {
+  console.log('Hello Casey!');
+  //return 'Hello Casey\'s World';
   return bcrypt.hash(password, 10);
 };
 
