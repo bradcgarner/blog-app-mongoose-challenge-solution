@@ -36,7 +36,7 @@ const basicStrategy = new BasicStrategy((username, password, done) => {
       }
       return user.validatePassword(password);
     })
-    .then (isValid => {
+    .then(isValid => {
       if (!isValid) {
         return Promise.reject({
           reason: 'LoginError',
@@ -58,7 +58,7 @@ passport.use(basicStrategy);
 app.use(passport.initialize()); // why do we do this for all app.use???
 
 const authenticate = passport.authenticate('basic', {session: false}); // what does session variable do??
-console.log(authenticate);
+//console.log('authenticate ', authenticate);
 
 // ~~~~~~~~~~~~~~~~~ User Endpoints ~~~~~~~~~~~~~~~~~~
 
@@ -66,23 +66,18 @@ app.get('/api/protected', authenticate, function(req, res) {
   res.json(req.user.apiRepr());
 });
 
-app.get('api/public', function(req,res) {
-  res.status(200).json('Good Morning, Vietnam!');
+app.get('/api/public', function(req,res) {
+  res.status(200).send('Good Morning, Vietnam!');
 });
 
 app.post('/users', (req, res) => {
-  // adding a new user
-  //console.log('req.body ', req.body);
+  // create a new user
   let {username, password, firstName, lastName} = req.body;
-  //console.log('4 vars ', username, password, firstName, lastName);
-  //console.log(UserModel);
   return UserModel
     .find({username})
     .count()
     .then(count => {
-      //console.log('count ', count);
       if (count > 0) {
-        //console.log('count > 0');
         return Promise.reject({
           code: 400, 
           reason: 'ValidationError',
@@ -90,12 +85,9 @@ app.post('/users', (req, res) => {
           location: 'username'
         });
       }
-      //console.log('ready to hash password');
-      console.log('UserModel.hashPassword ', UserModel.hashPassword);
       return UserModel.hashPassword(password);
     })
     .then(digest => {
-      console.log('digest ', digest);
       return UserModel
         .create({
           username,
@@ -141,7 +133,7 @@ app.get('/posts/:id', (req, res) => {
     });
 });
 
-app.post('/posts', (req, res) => {
+app.post('/posts', authenticate, (req, res) => {
   const requiredFields = ['title', 'content', 'author'];
   for (let i=0; i<requiredFields.length; i++) {
     const field = requiredFields[i];
