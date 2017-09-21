@@ -19,6 +19,7 @@ mongoose.Promise = global.Promise;
 const {DATABASE_URL, PORT} = require('./config');
 const {BlogPost, UserModel} = require('./models');
 
+// @@@@@@@@@@@@@@@@@@@@@@@@ USERS @@@@@@@@@@@@@@@@@@@@@@@@@@
 
 const basicStrategy = new BasicStrategy((username, password, done) => {
   let user;
@@ -52,6 +53,24 @@ const basicStrategy = new BasicStrategy((username, password, done) => {
       return done(err);
     });
 });
+
+passport.use(basicStrategy);
+app.use(passport.initialize()); // why do we do this for all app.use???
+
+const authenticate = passport.authenticate('basic', {session: false}); // what does session variable do??
+console.log(authenticate);
+
+// ~~~~~~~~~~~~~~~~~ User Endpoints ~~~~~~~~~~~~~~~~~~
+
+app.get('/api/protected', authenticate, function(req, res) {
+  res.json(req.user.apiRepr());
+});
+
+app.get('api/public', function(req,res) {
+  res.sendStatus('Good Morning, Vietnam!');
+});
+
+// @@@@@@@@@@@@@@@@@@@@@@@@ BLOG POSTS @@@@@@@@@@@@@@@@@@@@@@@@@@
 
 app.get('/posts', (req, res) => {
   BlogPost
