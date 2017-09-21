@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 
 mongoose.Promise = global.Promise;
 
+// @@@@@@@@@@@@@@@@@ BLOG POST MODEL @@@@@@@@@@@@@@@
 const blogPostSchema = mongoose.Schema({
   author: {
     firstName: String,
@@ -14,7 +15,6 @@ const blogPostSchema = mongoose.Schema({
   content: {type: String},
   created: {type: Date, default: Date.now}
 });
-
 
 blogPostSchema.virtual('authorName').get(function() {
   return `${this.author.firstName} ${this.author.lastName}`.trim();
@@ -30,10 +30,14 @@ blogPostSchema.methods.apiRepr = function() {
   };
 };
 
+const BlogPost = mongoose.model('BlogPost', blogPostSchema);
+
+// @@@@@@@@@@@@@@@@@ USER MODEL @@@@@@@@@@@@@@@
+
 const userSchema = mongoose.Schema({
   firstName: {type: String, required: true},
   lastName: {type: String, required: true},
-  username: {type: String, required: true},
+  username: {type: String, required: true, unique: true},
   password: {type: String, required: true},
   created: {type: Date, default: Date.now}
 });
@@ -54,6 +58,6 @@ userSchema.methods.apiRepr = function() {
   };
 };
 
-const BlogPost = mongoose.model('BlogPost', blogPostSchema);
+const UserModel = mongoose.model('User', userSchema);
 
-module.exports = {BlogPost};
+module.exports = {BlogPost, UserModel};

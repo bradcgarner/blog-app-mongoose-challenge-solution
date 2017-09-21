@@ -1,18 +1,57 @@
-const bodyParser = require('body-parser');
+'use strict';
+
 const express = require('express');
-const mongoose = require('mongoose');
-const morgan = require('morgan');
-
-const {DATABASE_URL, PORT} = require('./config');
-const {BlogPost} = require('./models');
-
 const app = express();
 
-app.use(morgan('common'));
+const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 
+const morgan = require('morgan');
+app.use(morgan('common'));
+
+const passport = require('passport');
+const BasicStrategy = require('passport-http').BasicStrategy;
+const bcrypt = require('bcryptjs');
+
+const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
+const {DATABASE_URL, PORT} = require('./config');
+const {BlogPost, UserModel} = require('./models');
+
+
+const basicStrategy = new BasicStrategy((username, password, done) => {
+  let user;
+  UserModel
+    .findOne({username})
+    .then(results => {
+      user = results;
+      if (!user) {
+        return Promise.reject({
+          reason: 'LoginError',
+          message: 'Incorrect username',
+          location: 'username' // what is this?
+        });
+      }
+      return user.validatePassword(password);
+    })
+    .then (isValid => {
+      if (!isValid) {
+        return Promise.reject({
+          reason: 'LoginError',
+          message: 'Incorrect password',
+          location: 'password'
+        });
+      }
+      return done(null, user);
+    })
+    .catch(err => {
+      if (err.reason === 'LoginError') {
+        return done(null, false);
+      }
+      return done(err);
+    });
+});
 
 app.get('/posts', (req, res) => {
   BlogPost
@@ -55,12 +94,11 @@ app.post('/posts', (req, res) => {
     })
     .then(blogPost => res.status(201).json(blogPost.apiRepr()))
     .catch(err => {
-        console.error(err);
-        res.status(500).json({error: 'Something went wrong'});
+      console.error(err);
+      res.status(500).json({error: 'Something went wrong'});
     });
 
 });
-
 
 app.delete('/posts/:id', (req, res) => {
   BlogPost
@@ -106,6 +144,15 @@ app.delete('/:id', (req, res) => {
     });
 });
 
+app.post('/users', (req, res) => {
+  
+  
+  req.body.firstName // Alice
+  req.body.lastName // Bobson
+  
+  // "username": "alice_user",
+  //"password": "topsecret",
+});
 
 app.use('*', function(req, res) {
   res.status(404).json({message: 'Not Found'});
@@ -127,10 +174,10 @@ function runServer(databaseUrl=DATABASE_URL, port=PORT) {
         console.log(`Your app is listening on port ${port}`);
         resolve();
       })
-      .on('error', err => {
-        mongoose.disconnect();
-        reject(err);
-      });
+        .on('error', err => {
+          mongoose.disconnect();
+          reject(err);
+        });
     });
   });
 }
@@ -139,15 +186,15 @@ function runServer(databaseUrl=DATABASE_URL, port=PORT) {
 // use it in our integration tests later.
 function closeServer() {
   return mongoose.disconnect().then(() => {
-     return new Promise((resolve, reject) => {
-       console.log('Closing server');
-       server.close(err => {
-           if (err) {
-               return reject(err);
-           }
-           resolve();
-       });
-     });
+    return new Promise((resolve, reject) => {
+      console.log('Closing server');
+      server.close(err => {
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      });
+    });
   });
 }
 
