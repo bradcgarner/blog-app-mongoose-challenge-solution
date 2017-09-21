@@ -46,6 +46,14 @@ userSchema.methods.validatePassword = function(password) {
   return bcrypt.hash(password, 10);
 };
 
+userSchema.methods.apiRepr = function() {
+  return {
+    firstName: this.firstName || '',
+    lastName: this.lastName || '',
+    username: this.username || ''
+  };
+};
+
 const BlogPost = mongoose.model('BlogPost', blogPostSchema);
 
 module.exports = {BlogPost};
